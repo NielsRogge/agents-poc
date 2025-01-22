@@ -9,7 +9,7 @@ from utils import load_agent_config, create_transfer_tool
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Load agent configurations
-haiku_config = load_agent_config('haiku.txt')
+haiku_config = load_agent_config('haiku.json')
 haiku_agent = AgentConfig(
     name=haiku_config['name'],
     public_description=haiku_config['description'],
@@ -17,7 +17,7 @@ haiku_agent = AgentConfig(
     tools=[],
 )
 
-greeter_config = load_agent_config('greeter.txt')
+greeter_config = load_agent_config('greeter.json')
 greeter_agent = AgentConfig(
     name=greeter_config['name'],
     public_description=greeter_config['description'],
@@ -29,6 +29,7 @@ greeter_agent = AgentConfig(
 # Add transfer tool to greeter
 greeter_agent.tools.append(create_transfer_tool(greeter_agent.downstream_agents))
 
+
 def chat_with_agent(agent: AgentConfig, user_message: str):
     """Chat with an agent using the OpenAI API"""
     
@@ -38,8 +39,6 @@ def chat_with_agent(agent: AgentConfig, user_message: str):
     ]
     
     # Call OpenAI API
-    print("Agent tools:", agent.tools)
-
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=messages,
@@ -48,8 +47,6 @@ def chat_with_agent(agent: AgentConfig, user_message: str):
     )
     
     assistant_message = response.choices[0].message
-
-    print("Assistant message:", assistant_message)
     
     # Handle function calls
     if assistant_message.tool_calls:
@@ -71,17 +68,18 @@ def chat_with_agent(agent: AgentConfig, user_message: str):
                     function_args["conversation_context"]
                 )
     
-    return assistant_message.content
+    return assistant_message.content, agent
 
 
 # Example usage
 async def main():
     # Start conversation with greeter agent
-    response = chat_with_agent(greeter_agent, "Hi there!")
+    current_agent = greeter_agent
+    response, current_agent = chat_with_agent(current_agent, "Hi there!")
     print("Greeter:", response)
     
     # User wants a haiku
-    response = chat_with_agent(greeter_agent, "Yes, I'd love a haiku about Python!")
+    response, current_agent = chat_with_agent(current_agent, "Yes, I'd love a haiku about Python!")
     print("Response:", response)
 
 
