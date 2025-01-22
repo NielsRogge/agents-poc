@@ -1,29 +1,13 @@
-# README #
+# OpenAI agents
 
-This README would normally document whatever steps are necessary to get your application up and running.
+This repository contains a minimal re-implementation of [OpenAI's real-time agents repository](https://github.com/openai/openai-realtime-agents/tree/main) in Python.
 
-### What is this repository for? ###
+## Usage
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
-
-### How do I get set up? ###
-
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
+```bash
+python main.py
+```
 
 ### Who do I talk to? ###
 
-* Repo owner or admin
-* Other community or team contact
+* Repo owner: Niels Rogge
