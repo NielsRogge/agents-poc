@@ -11,9 +11,9 @@ class Tool(TypedDict):
 
 
 @dataclass
-class AgentConfig:
+class Agent:
     name: str
     public_description: str
     instructions: str
     tools: List[Tool]
-    downstream_agents: Optional[List['AgentConfig']] = None
+    downstream_agents: Optional[List['Agent']] = None

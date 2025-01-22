@@ -1,23 +1,29 @@
 import gradio as gr
 from main import chat_with_agent
-from components import AgentConfig 
+from components import Agent 
+from utils import create_transfer_tool
 
 
-def chat_wrapper(message: str, history: list[dict], agent_name: str) -> tuple[str, str]:
-    response, new_agent_name = chat_with_agent(agent_name=agent_name, message=message, history=history)
-    return response, new_agent_name
+def chat_wrapper(message: str, history: list[dict], agent: Agent) -> tuple[str, Agent]:
+    
+    if agent is None:
+        agent = get_agent("greeter")
+        agent.tools.append(create_transfer_tool(agent.downstream_agents))
+    
+    response, new_agent = chat_with_agent(agent=agent, message=message, history=history)
+    return response, new_agent
 
 
-# Create the Gradio interface
-demo = gr.ChatInterface(
-    fn=chat_wrapper,
-    title="Agent Chat System",
-    description="Chat with our agent system. Start by saying hello!",
-    additional_inputs=[
-        gr.State("greeter")  # Initial agent name
-    ],
-    theme=gr.themes.Soft()
-)
+with gr.Blocks() as demo:
+    session_id = gr.State()
+    demo = gr.ChatInterface(
+        fn=chat_wrapper,
+        title="Agent Chat System",
+        description="Chat with our agent system. Start by saying hello!",
+        additional_inputs=[session_id],
+        additional_outputs=[session_id],
+        theme=gr.themes.Soft()
+    )
 
 if __name__ == "__main__":
     demo.launch()

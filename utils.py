@@ -1,17 +1,23 @@
 import os
 from typing import List
-from components import AgentConfig, Tool
+from components import Agent, Tool
 import json
 
 
-def load_agent_config(filename):
-    """Load agent configuration from a JSON file"""
-    filepath = os.path.join('agents', filename.replace('.txt', '.json'))
+def get_agent(agent_name: str) -> Agent:
+    """Load agent configuration from a JSON file and return an Agent object"""
+    filepath = os.path.join('agents', f'{agent_name}.json')
     with open(filepath) as f:
-        return json.load(f)
+        config = json.load(f)
+    return Agent(
+        name=config['name'],
+        public_description=config['description'],
+        instructions=config['instructions'],
+        tools=[],
+    )
 
 
-def create_transfer_tool(downstream_agents: List[AgentConfig]) -> Tool:
+def create_transfer_tool(downstream_agents: List[Agent]) -> Tool:
     """Creates a tool for transferring to other agents"""
     available_agents_list = "\n".join([
         f"- {agent.name}: {agent.public_description}"

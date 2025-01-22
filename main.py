@@ -2,27 +2,15 @@ import json
 import os
 from openai import OpenAI
 
-from components import AgentConfig 
-from utils import load_agent_config, create_transfer_tool
+from components import Agent 
+from utils import create_transfer_tool, get_agent
 
 # Set your OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Load agent configurations
-def get_agent_config(agent_name: str) -> AgentConfig:
-    config = load_agent_config(f'{agent_name}.json')
-    return AgentConfig(
-        name=config['name'],
-        public_description=config['description'],
-        instructions=config['instructions'],
-        tools=[],
-    )
 
-
-def chat_with_agent(agent_name: str, message: str, history: list[dict]) -> tuple[str, AgentConfig]:
+def chat_with_agent(agent: Agent, message: str, history: list[dict]) -> tuple[str, Agent]:
     """Chat with an agent using the OpenAI API"""
-
-    agent = get_agent_config(agent_name)
     
     messages = [{"role": "system", "content": agent.instructions}]
     messages.extend(history)
@@ -58,21 +46,26 @@ def chat_with_agent(agent_name: str, message: str, history: list[dict]) -> tuple
                     function_args["conversation_context"]
                 )
     
-    return assistant_message.content, agent.name
+    return assistant_message.content, agent
 
 
 # Example usage
-async def main():
+def main():
+    # Load agents
+    greeter_agent = get_agent("greeter")
+    haiku_agent = get_agent("haiku")
+    greeter_agent.downstream_agents = [haiku_agent]
+    tool = create_transfer_tool(greeter_agent.downstream_agents)
+    greeter_agent.tools.append(tool)
+    
     # Start conversation with greeter agent
-    current_agent = "greeter"
-    response, current_agent = chat_with_agent(current_agent, "Hi there!")
+    response, _ = chat_with_agent(greeter_agent, "Hi there!", history=[])
     print("Greeter:", response)
     
-    # User wants a haiku
-    response, current_agent = chat_with_agent(current_agent, "Yes, I'd love a haiku about Python!")
-    print("Response:", response)
+    # Start conversation with haiku agent
+    response, _ = chat_with_agent(haiku_agent, "Yes, I'd love a haiku about Python!", history=[])
+    print("Haiku:", response)
 
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    main()
