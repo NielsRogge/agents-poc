@@ -6,20 +6,20 @@ from utils import get_agent, create_transfer_tool
 
 def chat_wrapper(message: str, history: list[dict], agent: Agent) -> tuple[str, Agent]:
     
-    if agent is None:
-        greeter_agent = get_agent("greeter")
-        haiku_agent = get_agent("haiku")
-        greeter_agent.downstream_agents = [haiku_agent]
-        tool = create_transfer_tool(greeter_agent.downstream_agents)
-        greeter_agent.tools.append(tool)
-        agent = greeter_agent
-    
     response, new_agent = chat_with_agent(agent=agent, message=message, history=history)
     return response, new_agent
 
 
+greeter_agent = get_agent("greeter")
+haiku_agent = get_agent("haiku")
+greeter_agent.downstream_agents = [haiku_agent]
+tool = create_transfer_tool(greeter_agent.downstream_agents)
+greeter_agent.tools.append(tool)
+agent = greeter_agent
+
+
 with gr.Blocks() as demo:
-    session_id = gr.State()
+    session_id = gr.State(value=agent)
     demo = gr.ChatInterface(
         fn=chat_wrapper,
         title="Agent Chat System",
