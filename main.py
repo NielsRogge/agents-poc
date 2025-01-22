@@ -9,34 +9,24 @@ from utils import load_agent_config, create_transfer_tool
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Load agent configurations
-haiku_config = load_agent_config('haiku.json')
-haiku_agent = AgentConfig(
-    name=haiku_config['name'],
-    public_description=haiku_config['description'],
-    instructions=haiku_config['instructions'],
-    tools=[],
-)
-
-greeter_config = load_agent_config('greeter.json')
-greeter_agent = AgentConfig(
-    name=greeter_config['name'],
-    public_description=greeter_config['description'],
-    instructions=greeter_config['instructions'],
-    tools=[],
-    downstream_agents=[haiku_agent]
-)
-
-# Add transfer tool to greeter
-greeter_agent.tools.append(create_transfer_tool(greeter_agent.downstream_agents))
+def get_agent_config(agent_name: str) -> AgentConfig:
+    config = load_agent_config(f'{agent_name}.json')
+    return AgentConfig(
+        name=config['name'],
+        public_description=config['description'],
+        instructions=config['instructions'],
+        tools=[],
+    )
 
 
-def chat_with_agent(agent: AgentConfig, user_message: str):
+def chat_with_agent(agent_name: str, message: str, history: list[dict]) -> tuple[str, AgentConfig]:
     """Chat with an agent using the OpenAI API"""
+
+    agent = get_agent_config(agent_name)
     
-    messages = [
-        {"role": "system", "content": agent.instructions},
-        {"role": "user", "content": user_message}
-    ]
+    messages = [{"role": "system", "content": agent.instructions}]
+    messages.extend(history)
+    messages.append({"role": "user", "content": message})
     
     # Call OpenAI API
     response = client.chat.completions.create(
@@ -64,17 +54,17 @@ def chat_with_agent(agent: AgentConfig, user_message: str):
             if destination_agent:
                 print(f"Transferring to {destination_agent.name}...")
                 return chat_with_agent(
-                    destination_agent,
+                    destination_agent.name,
                     function_args["conversation_context"]
                 )
     
-    return assistant_message.content, agent
+    return assistant_message.content, agent.name
 
 
 # Example usage
 async def main():
     # Start conversation with greeter agent
-    current_agent = greeter_agent
+    current_agent = "greeter"
     response, current_agent = chat_with_agent(current_agent, "Hi there!")
     print("Greeter:", response)
     

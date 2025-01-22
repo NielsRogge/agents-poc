@@ -19,6 +19,14 @@ uv add agents-poc
 uv run main.py
 ```
 
+## [WIP] Gradio
+
+We also provide a Gradio interface to interact with the multi-agent system.
+
+```bash
+uv run app.py
+```
+
 ### Who do I talk to? ###
 
 * Repo owner: Niels Rogge

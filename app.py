@@ -1,17 +1,23 @@
 import gradio as gr
 from main import chat_with_agent
+from components import AgentConfig 
+
+
+def chat_wrapper(message: str, history: list[dict], agent_name: str) -> tuple[str, str]:
+    response, new_agent_name = chat_with_agent(agent_name=agent_name, message=message, history=history)
+    return response, new_agent_name
 
 
 # Create the Gradio interface
 demo = gr.ChatInterface(
-    fn=chat_with_agent,
+    fn=chat_wrapper,
     title="Agent Chat System",
-    additional_outputs=[
-        gr.outputs.Textbox(label="Current Agent"),
-    ],
     description="Chat with our agent system. Start by saying hello!",
-    examples=["Hi there!", "I'd like a haiku about Python", "Can you write a haiku about nature?"],
+    additional_inputs=[
+        gr.State("greeter")  # Initial agent name
+    ],
     theme=gr.themes.Soft()
 )
 
-demo.launch()
+if __name__ == "__main__":
+    demo.launch()
