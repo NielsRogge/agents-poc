@@ -1,14 +1,18 @@
 import gradio as gr
 from main import chat_with_agent
 from components import Agent 
-from utils import create_transfer_tool
+from utils import get_agent, create_transfer_tool
 
 
 def chat_wrapper(message: str, history: list[dict], agent: Agent) -> tuple[str, Agent]:
     
     if agent is None:
-        agent = get_agent("greeter")
-        agent.tools.append(create_transfer_tool(agent.downstream_agents))
+        greeter_agent = get_agent("greeter")
+        haiku_agent = get_agent("haiku")
+        greeter_agent.downstream_agents = [haiku_agent]
+        tool = create_transfer_tool(greeter_agent.downstream_agents)
+        greeter_agent.tools.append(tool)
+        agent = greeter_agent
     
     response, new_agent = chat_with_agent(agent=agent, message=message, history=history)
     return response, new_agent
