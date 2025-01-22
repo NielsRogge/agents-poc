@@ -52,3 +52,5 @@ Thumbs.db
 .venv
 .env
 
+# Keys
+*.env

@@ -38,14 +38,18 @@ def chat_with_agent(agent: AgentConfig, user_message: str):
     ]
     
     # Call OpenAI API
+    print("Agent tools:", agent.tools)
+
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=messages,
         tools=agent.tools if agent.tools else None,
-        tool_choice="auto"
+        tool_choice="auto" if agent.tools else None,
     )
     
     assistant_message = response.choices[0].message
+
+    print("Assistant message:", assistant_message)
     
     # Handle function calls
     if assistant_message.tool_calls:
@@ -67,17 +71,17 @@ def chat_with_agent(agent: AgentConfig, user_message: str):
                     function_args["conversation_context"]
                 )
     
-    return assistant_message["content"]
+    return assistant_message.content
 
 
 # Example usage
 async def main():
     # Start conversation with greeter agent
-    response = await chat_with_agent(greeter_agent, "Hi there!")
+    response = chat_with_agent(greeter_agent, "Hi there!")
     print("Greeter:", response)
     
     # User wants a haiku
-    response = await chat_with_agent(greeter_agent, "Yes, I'd love a haiku about Python!")
+    response = chat_with_agent(greeter_agent, "Yes, I'd love a haiku about Python!")
     print("Response:", response)
 
 

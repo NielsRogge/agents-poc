@@ -20,28 +20,30 @@ def create_transfer_tool(downstream_agents: List[AgentConfig]) -> Tool:
     
     return {
         "type": "function",
-        "name": "transferAgents",
-        "description": f"""Triggers a transfer of the user to a more specialized agent.
-Available Agents:
-{available_agents_list}
-        """,
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "rationale_for_transfer": {
-                    "type": "string",
-                    "description": "The reasoning why this transfer is needed."
+        "function": {
+            "name": "transferAgents",
+            "description": f"""Triggers a transfer of the user to a more specialized agent.
+                        Available Agents:
+                        {available_agents_list}
+                        """,
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "rationale_for_transfer": {
+                        "type": "string",
+                        "description": "The reasoning why this transfer is needed."
+                    },
+                    "conversation_context": {
+                        "type": "string", 
+                        "description": "Relevant context from the conversation."
+                    },
+                    "destination_agent": {
+                        "type": "string",
+                        "description": "The destination agent to handle the request.",
+                        "enum": [agent.name for agent in downstream_agents]
+                    }
                 },
-                "conversation_context": {
-                    "type": "string", 
-                    "description": "Relevant context from the conversation."
-                },
-                "destination_agent": {
-                    "type": "string",
-                    "description": "The destination agent to handle the request.",
-                    "enum": [agent.name for agent in downstream_agents]
-                }
-            },
-            "required": ["rationale_for_transfer", "conversation_context", "destination_agent"]
+                "required": ["rationale_for_transfer", "conversation_context", "destination_agent"]
+            }
         }
     }
