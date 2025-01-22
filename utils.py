@@ -1,16 +1,14 @@
 import os
 from typing import List
 from components import AgentConfig, Tool
+import json
 
 
 def load_agent_config(filename):
-    """Load agent configuration from a text file"""
-    config = {}
-    with open(os.path.join('agents', filename)) as f:
-        for line in f:
-            key, value = line.strip().split(': ', 1)
-            config[key] = value
-    return config
+    """Load agent configuration from a JSON file"""
+    filepath = os.path.join('agents', filename.replace('.txt', '.json'))
+    with open(filepath) as f:
+        return json.load(f)
 
 
 def create_transfer_tool(downstream_agents: List[AgentConfig]) -> Tool:

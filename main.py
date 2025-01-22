@@ -1,12 +1,12 @@
 import json
 import os
-import openai
+from openai import OpenAI
 
-from components import AgentConfig, create_transfer_tool
-from utils import load_agent_config
+from components import AgentConfig 
+from utils import load_agent_config, create_transfer_tool
 
-# Set your OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Set your OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Load agent configurations
 haiku_config = load_agent_config('haiku.txt')
@@ -29,7 +29,7 @@ greeter_agent = AgentConfig(
 # Add transfer tool to greeter
 greeter_agent.tools.append(create_transfer_tool(greeter_agent.downstream_agents))
 
-async def chat_with_agent(agent: AgentConfig, user_message: str):
+def chat_with_agent(agent: AgentConfig, user_message: str):
     """Chat with an agent using the OpenAI API"""
     
     messages = [
@@ -38,19 +38,20 @@ async def chat_with_agent(agent: AgentConfig, user_message: str):
     ]
     
     # Call OpenAI API
-    response = await openai.ChatCompletion.acreate(
-        model="gpt-4",
+    response = client.chat.completions.create(
+        model="gpt-4o",
         messages=messages,
-        functions=agent.tools if agent.tools else None,
-        function_call="auto"
+        tools=agent.tools if agent.tools else None,
+        tool_choice="auto"
     )
     
     assistant_message = response.choices[0].message
     
     # Handle function calls
-    if assistant_message.get("function_call"):
-        function_name = assistant_message["function_call"]["name"]
-        function_args = json.loads(assistant_message["function_call"]["arguments"])
+    if assistant_message.tool_calls:
+        tool_call = assistant_message.tool_calls[0]
+        function_name = tool_call.function.name
+        function_args = json.loads(tool_call.function.arguments)
         
         if function_name == "transferAgents":
             # Find the destination agent
@@ -61,7 +62,7 @@ async def chat_with_agent(agent: AgentConfig, user_message: str):
             )
             if destination_agent:
                 print(f"Transferring to {destination_agent.name}...")
-                return await chat_with_agent(
+                return chat_with_agent(
                     destination_agent,
                     function_args["conversation_context"]
                 )
